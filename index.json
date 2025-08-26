@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "declaration": true,
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "resolvePackageJsonExports": true,
+    "resolvePackageJsonImports": true,
+    "outDir": "${configDir}/artifacts/dist",
+    "declarationDir": "${configDir}/artifacts/@types/",
+    "tsBuildInfoFile": "${configDir}/artifacts/.tsbuildinfo"
+  },
+  "outDir": "${configDir}/dist",
+  "includes": [
+    "${configDir}/src/**/*.ts",
+    "${configDir}/src/**/*.tsx",
+    "${configDir}/src/**/*.mts",
+    "${configDir}/src/**/*.mtsx",
+    "${configDir}/src/*.ts",
+    "${configDir}/src/*.tsx",
+    "${configDir}/src/*.mts",
+    "${configDir}/src/*.mtsx",
+    "${configDir}/index.ts",
+    "${configDir}/index.mts",
+    "${configDir}/index.tsx",
+    "${configDir}/index.mtsx",
+    "${configDir}/module-federation.config.ts",
+    "${configDir}/module-federation.config.mts",
+    "${configDir}/webpack.config.ts",
+    "${configDir}/webpack.config.mts"
+  ],
+  "ts-node": {
+    "esm": true,
+    "swc": true,
+    "files": true,
+    "preferTsExts": true
+  }
+}

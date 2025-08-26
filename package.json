@@ -1,0 +1,30 @@
+{
+  "name": "@paretio/tsconfig",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./index.json",
+  "files": [
+    "./index.json"
+  ],
+  "exports": {
+    ".": "./index.json"
+  },
+  "author": "jmurphyau",
+  "engines": {
+    "pnpm": ">=10.15",
+    "node": ">=22.18"
+  },
+  "devDependencies": {
+    "typescript": "^5.9"
+  },
+  "keywords": [
+    "tsconfig"
+  ],
+  "dependencies": {
+    "ts-node": "^11.0.0-beta.1"
+  },
+  "bundleDependencies": [
+    "ts-node"
+  ]
+}
