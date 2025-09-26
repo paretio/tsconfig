@@ -20,7 +20,7 @@ const configs = [
 
 const pkgJson = readFileSync(resolve("package.json"), "utf-8");
 const pkgJsonName = JSON.parse(pkgJson).name;
-const pkgExports = Object.keys(JSON.parse(pkgJson).exports).map(v => v.replace(".", pkgJsonName))
+const pkgExports = Object.keys(JSON.parse(pkgJson).exports).filter(exp => exp !== "./package.json").map(v => v.replace(".", pkgJsonName))
 
 async function execPromise(command, opt) {
   return new Promise((res, rej) => {
