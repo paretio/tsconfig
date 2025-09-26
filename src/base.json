@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "declaration": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "resolvePackageJsonExports": true,
+    "resolvePackageJsonImports": true,
+
+    "rootDir": "${configDir}/src",
+    "outDir": "${configDir}/artifacts/dist",
+    "declarationDir": "${configDir}/artifacts/@types",
+    "tsBuildInfoFile": "${configDir}/artifacts/.tsbuildinfo",
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
+  },
+  "include": [
+      "${configDir}/src/**/*.ts",
+      "${configDir}/src/**/*.tsx",
+      "${configDir}/src/**/*.mts",
+      "${configDir}/src/**/*.cts",
+      "${configDir}/index.ts",
+      "${configDir}/index.tsx",
+      "${configDir}/index.mts",
+      "${configDir}/index.cts",
+      "${configDir}/module-federation.config.ts",
+      "${configDir}/module-federation.config.mts",
+      "${configDir}/module-federation.config.cts",
+      "${configDir}/webpack.config.ts",
+      "${configDir}/webpack.config.mts",
+      "${configDir}/webpack.config.cts"
+    ],
+    "exclude": ["${configDir}/node_modules", "${configDir}/artifacts"],
+    "ts-node": {
+      "esm": true,
+      "swc": true,
+      "files": true,
+      "preferTsExts": true
+    }
+}
