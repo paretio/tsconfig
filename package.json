@@ -21,6 +21,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "repository": {
+    "url": "https://github.com/paretio/tsconfig"
+  },
   "devDependencies": {
     "ts-node": "^11.0.0-beta.1"
   }
