@@ -35,16 +35,18 @@ Configuration inheritance structure:
 ### Release Management
 
 ```bash
-# Create beta release (for feature branches)
-npm run release:beta
-
-# Create stable releases (from main branch only)
+# Create stable releases (from main branch, creates release branch + PR)
 npm run release:patch    # 0.5.0 → 0.5.1
 npm run release:minor    # 0.5.0 → 0.6.0
 npm run release:major    # 0.5.0 → 1.0.0
 
-# Promote beta to stable
-npm version 0.5.0
+# After running above, create PR:
+gh pr create --title "Release v0.5.1" --body "Release version 0.5.1"
+
+# Merge PR → automatic npm publish + GitHub release
+
+# Create beta release (for feature branches)
+npm run release:beta
 
 # Run tests manually
 npm run execute-tests
@@ -83,17 +85,22 @@ Both test projects contain various file types (`.js`, `.jsx`, `.ts`, `.mts`, `.c
 
 ## Release Workflow
 
-The release process is fully automated through npm scripts and GitHub Actions:
+The release process requires PR approval before publishing to npm:
 
-1. **Local:** Run `npm run release:*` or `npm version`
-2. **Preversion:** Tests run automatically via `execute-tests.mjs`
-3. **Version:** package.json updated and git tag created
-4. **Postversion:** Changes pushed to GitHub with tag
-5. **GitHub Actions:** Workflow triggered by tag push
-6. **CI/CD:** Tests run again, package published to npm with provenance
-7. **GitHub:** Release created automatically
+1. **Local:** Run `npm run release:*` from main branch
+2. **Preversion:** Checks for uncommitted changes (blocks if any), then runs tests
+3. **Version:** package.json updated, commit created on main
+4. **Postversion:** Creates `release/v*` branch, deletes local tag, pushes branch
+5. **Manual:** Create PR from release branch → main
+6. **Review:** PR must be approved and merged
+7. **GitHub Actions:** Detects version change on main after merge
+8. **CI/CD:** Runs tests, publishes to npm with provenance
+9. **GitHub Actions:** Creates git tag on main
+10. **GitHub Actions:** Creates GitHub Release
 
-**Important:** Never create git tags manually. Always use npm version commands.
+**Important:**
+- You must have no uncommitted changes when running npm version commands
+- Releases only publish after PR is merged to main (provides review checkpoint)
 
 ## Configuration Details
 

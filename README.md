@@ -36,7 +36,7 @@ npm run release:beta  # Creates 0.5.0-beta.1
 
 ## Create New Stable Release
 
-Create a stable release on the main branch after a PR has been merged. Stable releases are published to npm with the `@latest` tag.
+Stable releases require a pull request to main. The release is published to npm with the `@latest` tag only after the PR is merged.
 
 ### Commands
 
@@ -57,30 +57,41 @@ npm version 0.5.0
 ### Example
 
 ```sh
-# After PR merged to main
+# Start from main branch
 git checkout main
 git pull
 
-# Create patch release
+# Create patch release (creates release branch automatically)
 npm run release:patch
 
-# Or promote beta to stable
-npm version 0.5.0
+# This creates release/v0.5.1 branch and pushes it
+# Now create a PR from release/v0.5.1 → main
+gh pr create --title "Release v0.5.1" --body "Release version 0.5.1"
+
+# After PR is approved and merged, the workflow automatically:
+# - Publishes to npm
+# - Creates git tag
+# - Creates GitHub release
 ```
 
 ## What Happens Automatically
 
-When you run `npm version` or `npm run release:*`, the following happens automatically:
+When you run `npm run release:*`, the following happens:
 
 | Step | Where          | What Happens                                                          |
 |------|----------------|-----------------------------------------------------------------------|
-| 1    | Local          | `npm run release:beta` runs tests, updates package.json, creates tag  |
-| 2    | Local          | `postversion` hook pushes commit + tag to GitHub                      |
-| 3    | GitHub         | Detects tag push matching workflow pattern                            |
-| 4    | GitHub Actions | Checks out code, verifies version, runs tests                         |
-| 5    | GitHub Actions | Determines correct npm dist-tag (beta/latest)                         |
-| 6    | GitHub Actions | Publishes to npm with provenance                                      |
-| 7    | GitHub Actions | Creates GitHub Release                                                |
-| 8    | NPM            | Package available for installation                                    |
+| 1    | Local          | Checks for uncommitted changes (blocks if any)                        |
+| 2    | Local          | Runs tests via `preversion` hook                                      |
+| 3    | Local          | Updates package.json, creates commit on main                          |
+| 4    | Local          | Creates `release/v*` branch with the version commit                   |
+| 5    | Local          | Deletes local tag (will be created on main after merge)              |
+| 6    | Local          | Pushes release branch to GitHub                                       |
+| 7    | You            | Create PR from release branch → main                                  |
+| 8    | You            | Review and merge PR                                                   |
+| 9    | GitHub Actions | Detects version change on main                                        |
+| 10   | GitHub Actions | Runs tests, publishes to npm with provenance                          |
+| 11   | GitHub Actions | Creates git tag on main                                               |
+| 12   | GitHub Actions | Creates GitHub Release                                                |
+| 13   | NPM            | Package available for installation                                    |
 
-**Never manually create git tags.** Always use `npm version` commands.
+**Important:** You must have no uncommitted changes when running `npm version` commands.

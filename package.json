@@ -20,9 +20,9 @@
   },
   "scripts": {
     "execute-tests": "utils/execute-tests.mjs",
-    "preversion": "npm run execute-tests",
+    "preversion": "git diff-index --quiet HEAD -- || (echo '❌ Error: Uncommitted changes detected. Please commit or stash your changes before running npm version.' && exit 1) && npm run execute-tests",
     "version": "git add package.json",
-    "postversion": "git push && git push --tags",
+    "postversion": "VERSION=$(node -p \"require('./package.json').version\") && BRANCH=\"release/v$VERSION\" && git checkout -b \"$BRANCH\" && git tag -d \"v$VERSION\" && git push -u origin \"$BRANCH\" && git checkout main",
     "release:beta": "npm version prerelease --preid=beta",
     "release:patch": "npm version patch",
     "release:minor": "npm version minor",
