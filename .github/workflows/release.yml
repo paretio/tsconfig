@@ -3,13 +3,15 @@ name: release
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*.*.*"          # Stable releases
+      - "v*.*.*-beta.*"   # Beta releases
+      - "v*.*.*-alpha.*"  # Alpha releases
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write   # for creating GitHub releases
       id-token: write   # for npm provenance
     steps:
       - uses: actions/checkout@v4
@@ -21,15 +23,46 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run execute-tests
+      - name: Verify tag matches package.json version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "❌ Tag version (v$TAG_VERSION) doesn't match package.json ($PKG_VERSION)"
+            echo "This should not happen if using 'npm version' commands"
+            exit 1
+          fi
+          echo "✅ Version verified: $TAG_VERSION"
 
-      # set package.json version from tag `vX.Y.Z`
-      - name: Sync version from tag
+      - name: Run tests
+        run: npm run execute-tests
+
+      - name: Determine npm dist-tag
+        id: dist-tag
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          npm version "$VERSION" --no-git-tag-version
+          if [[ "$VERSION" == *"beta"* ]]; then
+            echo "tag=beta" >> $GITHUB_OUTPUT
+            echo "📦 Publishing to npm @beta"
+          elif [[ "$VERSION" == *"alpha"* ]]; then
+            echo "tag=alpha" >> $GITHUB_OUTPUT
+            echo "📦 Publishing to npm @alpha"
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "📦 Publishing to npm @latest"
+          fi
 
-      - name: Publish
-        run: npm publish --access public --provenance
+      - name: Publish to npm
+        run: npm publish --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        run: |
+          if [[ "${{ steps.dist-tag.outputs.tag }}" != "latest" ]]; then
+            gh release create ${{ github.ref_name }} --title "Release ${{ github.ref_name }}" --prerelease
+          else
+            gh release create ${{ github.ref_name }} --title "Release ${{ github.ref_name }}"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
