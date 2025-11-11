@@ -2,10 +2,8 @@ name: release
 
 on:
   push:
-    tags:
-      - "v*.*.*"          # Stable releases
-      - "v*.*.*-beta.*"   # Beta releases
-      - "v*.*.*-alpha.*"  # Alpha releases
+    branches:
+      - main
 
 jobs:
   publish:
@@ -15,32 +13,45 @@ jobs:
       id-token: write   # for npm provenance
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch all history and tags
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
-      - run: npm ci
-
-      - name: Verify tag matches package.json version
+      - name: Check if version changed
+        id: version-check
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          PKG_VERSION=$(node -p "require('./package.json').version")
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "❌ Tag version (v$TAG_VERSION) doesn't match package.json ($PKG_VERSION)"
-            echo "This should not happen if using 'npm version' commands"
-            exit 1
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          # Get previous version from the commit before this one
+          git checkout HEAD^
+          PREVIOUS_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "none")
+          git checkout -
+
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "✅ Version changed: $PREVIOUS_VERSION → $CURRENT_VERSION"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  No version change detected"
           fi
-          echo "✅ Version verified: $TAG_VERSION"
 
       - name: Run tests
-        run: npm run execute-tests
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          npm ci
+          npm run execute-tests
 
       - name: Determine npm dist-tag
+        if: steps.version-check.outputs.changed == 'true'
         id: dist-tag
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ steps.version-check.outputs.version }}"
           if [[ "$VERSION" == *"beta"* ]]; then
             echo "tag=beta" >> $GITHUB_OUTPUT
             echo "📦 Publishing to npm @beta"
@@ -53,16 +64,26 @@ jobs:
           fi
 
       - name: Publish to npm
+        if: steps.version-check.outputs.changed == 'true'
         run: npm publish --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Create GitHub Release
+      - name: Create Git tag
+        if: steps.version-check.outputs.changed == 'true'
         run: |
+          VERSION="${{ steps.version-check.outputs.version }}"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: Create GitHub Release
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          VERSION="${{ steps.version-check.outputs.version }}"
           if [[ "${{ steps.dist-tag.outputs.tag }}" != "latest" ]]; then
-            gh release create ${{ github.ref_name }} --title "Release ${{ github.ref_name }}" --prerelease
+            gh release create "v$VERSION" --title "Release v$VERSION" --prerelease
           else
-            gh release create ${{ github.ref_name }} --title "Release ${{ github.ref_name }}"
+            gh release create "v$VERSION" --title "Release v$VERSION"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
