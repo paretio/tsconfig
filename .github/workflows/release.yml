@@ -11,7 +11,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write   # for creating GitHub releases
       id-token: write   # for npm provenance
     steps:
       - uses: actions/checkout@v4
@@ -58,11 +58,11 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
+        run: |
+          if [[ "${{ steps.dist-tag.outputs.tag }}" != "latest" ]]; then
+            gh release create ${{ github.ref_name }} --title "Release ${{ github.ref_name }}" --prerelease
+          else
+            gh release create ${{ github.ref_name }} --title "Release ${{ github.ref_name }}"
+          fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: ${{ steps.dist-tag.outputs.tag != 'latest' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
