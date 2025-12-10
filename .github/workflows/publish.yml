@@ -58,7 +58,7 @@ jobs:
           echo "Upgraded npm version: $(npm --version)"
 
       - name: Publish to npm
-        run: npm publish --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
+        run: npm publish --access public --tag ${{ steps.dist-tag.outputs.tag }}
 
       - name: Create GitHub Release
         run: |
