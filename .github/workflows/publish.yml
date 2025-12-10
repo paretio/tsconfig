@@ -16,12 +16,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
-          registry-url: 'https://registry.npmjs.org'
+          node-version: '20'
 
-      - run: npm ci
+      - name: Check and upgrade npm for Trusted Publishing
+        run: |
+          echo "Current npm version: $(npm --version)"
+          npm install -g npm@latest
+          echo "Upgraded npm version: $(npm --version)"
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Verify tag matches package.json version
         run: |
@@ -52,14 +59,8 @@ jobs:
             echo "📦 Publishing to npm @latest"
           fi
 
-      - name: Check and upgrade npm for Trusted Publishing
-        run: |
-          echo "Current npm version: $(npm --version)"
-          npm install -g npm@latest
-          echo "Upgraded npm version: $(npm --version)"
-
       - name: Publish to npm
-        run: npm publish --access public --tag ${{ steps.dist-tag.outputs.tag }}
+        run: npm publish --provenance --tag ${{ steps.dist-tag.outputs.tag }}
 
       - name: Create GitHub Release
         run: |
