@@ -52,10 +52,14 @@ jobs:
             echo "📦 Publishing to npm @latest"
           fi
 
+      - name: Check and upgrade npm for Trusted Publishing
+        run: |
+          echo "Current npm version: $(npm --version)"
+          npm install -g npm@latest
+          echo "Upgraded npm version: $(npm --version)"
+
       - name: Publish to npm
         run: npm publish --access public --provenance --tag ${{ steps.dist-tag.outputs.tag }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         run: |
